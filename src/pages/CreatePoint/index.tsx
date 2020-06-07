@@ -11,6 +11,8 @@ import './styles.css';
 import axios from 'axios';
 import api from '../../services/api';
 
+import Dropzone from '../../components/Dropzone';
+
 interface Item {
   id: number;
   title: string;
@@ -44,11 +46,8 @@ const CreatePoint = () => {
   const [selectedUf, setSelectedUf] = useState('0');
   const [selectedCity, setSelectedCity] = useState('0');
   const [selectedItems, setSelectedItems] = useState<number[]>([]);
-
-  const [selectedPosition, setSelectedPosition] = useState<[number, number]>([
-    0,
-    0,
-  ]);
+  const [selectedPosition, setSelectedPosition] = useState<[number, number]>([0,0,]);
+  const [selectedFile, setSelectedFile] = useState<File>();
 
   const history = useHistory();
 
@@ -133,18 +132,21 @@ const CreatePoint = () => {
     const [latitude, longitude] = selectedPosition;
     const items = selectedItems;
 
-    const data = {
-      name,
-      email,
-      whatsapp,
-      uf,
-      city,
-      latitude,
-      longitude,
-      items,
-    };
+    const data = new FormData();
 
-    console.log(data);
+    data.append('name', name);
+    data.append('email', email);
+    data.append('whatsapp', whatsapp);
+    data.append('uf', uf);
+    data.append('city', city);
+    data.append('latitude', String(latitude));
+    data.append('longitude', String(longitude));
+    data.append('items', items.join(','));
+
+    if(selectedFile){
+      data.append('image', selectedFile);
+    }
+
 
     await api.post('/points', data);
 
@@ -165,10 +167,9 @@ const CreatePoint = () => {
       </header>
 
       <form onSubmit={handleSubmit} autoComplete="off">
-        <h1>
-          Cadastro do <br />
-          ponto de coleta
-        </h1>
+        <h1>Cadastro do <br />ponto de coleta</h1>
+
+        <Dropzone onFileUploaded={setSelectedFile} />
 
         <fieldset>
           <legend>
@@ -209,8 +210,8 @@ const CreatePoint = () => {
 
         <fieldset>
           <legend>
-            <h2>Endere?o</h2>
-            <span>Selecione o endere?o no mapa</span>
+            <h2>Endereço</h2>
+            <span>Selecione o endereço no mapa</span>
           </legend>
 
           <Map center={initialPosition} zoom={15} onClick={handleMapClick}>
